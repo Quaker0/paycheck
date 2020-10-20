@@ -1,6 +1,9 @@
 {
   "name": "paycheck",
+  "description": "Visualise your paycheck",
+  "author": "Niclas Bångman",
   "version": "0.1.0",
+  "main": "public/electron.js",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
@@ -10,16 +13,29 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
+    "cross-env": "7.0.2",
+    "electron-is-dev": "1.2.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "react-scripts": "3.4.3",
-    "typescript": "~3.7.2"
+    "react-scripts": "3.4.3"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "react-start": "react-scripts start",
+    "react-build": "react-scripts build",
+    "react-test": "react-scripts test",
+    "electron-start": "electron .",
+    "electron-build": "electron-builder",
+    "build": "npm run react-build && npm run electron-build",
+    "start": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\""
+  },
+  "build": {
+    "files": [
+      "build/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -35,5 +51,12 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "5.3.0",
+    "electron": "10.1.4",
+    "electron-builder": "22.9.1",
+    "typescript": "3.7.5",
+    "wait-on": "5.2.0"
   }
 }
