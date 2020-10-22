@@ -1,23 +1,17 @@
-import React, { Component } from 'react';
-import '@devexpress/dx-react-chart-bootstrap4/dist/dx-react-chart-bootstrap4.css';
-import './App.css';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
+import React, { Component } from "react";
+import "@devexpress/dx-react-chart-bootstrap4/dist/dx-react-chart-bootstrap4.css";
+import "./App.css";
+import Paper from "@material-ui/core/Paper";
+import Typography from "@material-ui/core/Typography";
+import Box from "@material-ui/core/Box";
 import { ThemeProvider, withStyles } from "@material-ui/core/styles";
 import createMuiTheme from "@material-ui/core/styles/createMuiTheme";
 import {
   ArgumentAxis,
   ValueAxis,
   Chart,
-  LineSeries,
-} from '@devexpress/dx-react-chart-material-ui';
-
-const data = [
-  { date: "2020-01-01", value: 10 },
-  { date: "2020-01-02", value: 20 },
-  { date: "2020-01-03", value: 30 },
-];
+  LineSeries
+} from "@devexpress/dx-react-chart-material-ui";
 
 
 const styles = (theme: any) => ({
@@ -25,7 +19,7 @@ const styles = (theme: any) => ({
     backgroundColor: "#282c34"
   },
   paper: {
-    backgroundColor: "ivory"
+    backgroundColor: "lightgrey"
   }
 });
 
@@ -40,11 +34,56 @@ export const theme = createMuiTheme({
 });
 
 
-interface Props {
-    classes: any;
+function calcCurrentMonthCosts(transactions: Array<Array<String|Number>>): Array<{date: String, value: Number} | undefined> {
+  const headers = transactions[0];
+  const dateIdx = headers.indexOf("Bokföringsdag");
+  const valueIdx = headers.indexOf("Belopp");
+  const labelIdx = headers.indexOf("Rubrik");
+  let filteredTransactions = [];
+  let salary = 0;
+  for (let i = 1; i < transactions.length; i++) {
+    if (transactions[i][labelIdx] === "Lön") {
+      salary = parseInt(transactions[i][valueIdx].toString());
+      break
+    }
+    else if (transactions[i][valueIdx].toString().startsWith("-")) {
+      filteredTransactions.push(transactions[i])
+    }
+  }
+
+  filteredTransactions = filteredTransactions.sort((a, b) => {
+    if (a[dateIdx] === b[dateIdx]) { return 0} ;
+    return Date.parse(a[dateIdx].toString()) > Date.parse(b[dateIdx].toString()) ? 1 : -1;
+  });
+
+  let totalAmount = salary;
+  return filteredTransactions.map(tx => {
+    const txValue = parseInt(tx[valueIdx].toString());
+    if (txValue > -10000) {
+      totalAmount += parseInt(tx[valueIdx].toString());
+      return {date: parseInt(tx[dateIdx].toString().split("-")[2]).toString(), value: totalAmount};
+    }
+    return undefined;
+  }).filter(Boolean);
 }
 
-class App extends Component<Props> {
+interface Props {
+  classes: any;
+}
+
+interface State {
+  classes: any;
+  transactions: Array<Array<String>>;
+  currentMonthCosts: any;
+}
+
+class App extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    const { classes } = this.props;
+    this.state = {transactions: [], classes: classes, currentMonthCosts: []};
+    this.loadTransactions = this.loadTransactions.bind(this)
+  }
 
   onDragOver = (event: any) => {
     event.stopPropagation();
@@ -58,23 +97,24 @@ class App extends Component<Props> {
   onFileDrop = (event: any) => {
     event.stopPropagation();
     event.preventDefault();
-
-    console.log("onFileDrop");
     
     const file = event.dataTransfer.files[0];
     const fileReader = new FileReader();
 
     fileReader.readAsText(file);
+    fileReader.onload = () => this.loadTransactions(fileReader.result)
+  }
 
-    fileReader.onload = function() {
-      const dataset = fileReader.result as any;
-      const result = dataset.split('\n').map((data: any) => data.split(';'));
-      console.log(result);
-    };
+  loadTransactions(dataset: any) {
+    const transactions = dataset.split("\n").map((data: any) => data.split(";"));
+    const currentMonthCosts = calcCurrentMonthCosts(transactions);
+    this.setState({transactions: transactions, currentMonthCosts: currentMonthCosts})
   }
 
   render() {
-    const { classes } = this.props;
+    const { classes, currentMonthCosts } = this.state;
+
+
     return (
       <ThemeProvider theme={theme}>
         <div className={classes.root} 
@@ -90,11 +130,10 @@ class App extends Component<Props> {
           </Box>
 
          <Paper className={classes.paper}>
-           <Chart data={data}>
-            <ArgumentAxis />
-            <ValueAxis />
-
-            <LineSeries valueField="value" argumentField="date" />
+           <Chart data={currentMonthCosts}>
+             <ArgumentAxis showLine showTicks/>
+             <ValueAxis showLine showTicks/>
+             <LineSeries valueField="value" argumentField="date" />
           </Chart>
         </Paper>
             
