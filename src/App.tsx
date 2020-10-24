@@ -1,6 +1,6 @@
 import React, { Component } from "react";
+import "source-map-support/register"
 import "@devexpress/dx-react-chart-bootstrap4/dist/dx-react-chart-bootstrap4.css";
-import "./App.css";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
