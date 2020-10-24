@@ -4,22 +4,17 @@ import "./App.css";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
+import Grid from "@material-ui/core/Grid";
 import { ThemeProvider, withStyles } from "@material-ui/core/styles";
 import createMuiTheme from "@material-ui/core/styles/createMuiTheme";
-import {
-  ArgumentAxis,
-  ValueAxis,
-  Chart,
-  LineSeries
-} from "@devexpress/dx-react-chart-material-ui";
-
+import { calcMonthCosts, calcMonthTotals, parseMonthlyTransactions, parseCostTransactions, TransactionTotals} from "./transactionHelpers";
+import { ArgumentAxis, ValueAxis, Chart, LineSeries } from "@devexpress/dx-react-chart-material-ui";
+import ValueCard from "./components/ValueCard";
 
 const styles = (theme: any) => ({
   root: {
-    backgroundColor: "#282c34"
-  },
-  paper: {
-    backgroundColor: "lightgrey"
+    backgroundColor: "#282c34",
+    padding: 50
   }
 });
 
@@ -33,40 +28,6 @@ export const theme = createMuiTheme({
   }
 });
 
-
-function calcCurrentMonthCosts(transactions: Array<Array<String|Number>>): Array<{date: String, value: Number} | undefined> {
-  const headers = transactions[0];
-  const dateIdx = headers.indexOf("Bokföringsdag");
-  const valueIdx = headers.indexOf("Belopp");
-  const labelIdx = headers.indexOf("Rubrik");
-  let filteredTransactions = [];
-  let salary = 0;
-  for (let i = 1; i < transactions.length; i++) {
-    if (transactions[i][labelIdx] === "Lön") {
-      salary = parseInt(transactions[i][valueIdx].toString());
-      break
-    }
-    else if (transactions[i][valueIdx].toString().startsWith("-")) {
-      filteredTransactions.push(transactions[i])
-    }
-  }
-
-  filteredTransactions = filteredTransactions.sort((a, b) => {
-    if (a[dateIdx] === b[dateIdx]) { return 0} ;
-    return Date.parse(a[dateIdx].toString()) > Date.parse(b[dateIdx].toString()) ? 1 : -1;
-  });
-
-  let totalAmount = salary;
-  return filteredTransactions.map(tx => {
-    const txValue = parseInt(tx[valueIdx].toString());
-    if (txValue > -10000) {
-      totalAmount += parseInt(tx[valueIdx].toString());
-      return {date: parseInt(tx[dateIdx].toString().split("-")[2]).toString(), value: totalAmount};
-    }
-    return undefined;
-  }).filter(Boolean);
-}
-
 interface Props {
   classes: any;
 }
@@ -75,13 +36,14 @@ interface State {
   classes: any;
   transactions: Array<Array<String>>;
   currentMonthCosts: any;
+  currentMonthTotals: TransactionTotals;
 }
 
 class App extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     const { classes } = this.props;
-    this.state = {transactions: [], classes: classes, currentMonthCosts: []};
+    this.state = {transactions: [], classes: classes, currentMonthCosts: [], currentMonthTotals: {cost: 0, revenue: 0, currency: ""}};
     this.loadTransactions = this.loadTransactions.bind(this)
   }
 
@@ -100,19 +62,21 @@ class App extends Component<Props, State> {
     
     const file = event.dataTransfer.files[0];
     const fileReader = new FileReader();
-
     fileReader.readAsText(file);
     fileReader.onload = () => this.loadTransactions(fileReader.result)
   }
 
   loadTransactions(dataset: any) {
     const transactions = dataset.split("\n").map((data: any) => data.split(";"));
-    const currentMonthCosts = calcCurrentMonthCosts(transactions);
-    this.setState({transactions: transactions, currentMonthCosts: currentMonthCosts})
+    const monthlyTransactions = parseMonthlyTransactions(transactions);
+    const monthlyCostTransaction = parseCostTransactions(transactions[0], monthlyTransactions[0]);
+    const currentMonthTotals = calcMonthTotals(transactions[0], monthlyTransactions[0]);
+    const currentMonthCosts = calcMonthCosts(transactions[0], monthlyCostTransaction);
+    this.setState({transactions: transactions, currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals})
   }
 
   render() {
-    const { classes, currentMonthCosts } = this.state;
+    const { classes, currentMonthCosts, currentMonthTotals } = this.state;
 
 
     return (
@@ -123,11 +87,28 @@ class App extends Component<Props, State> {
           onDragOver={this.onDragOver}
         >
         
-          <Box height="600px" justifyContent="center" alignItems="center" alignContent="center">
+          <Box height="80px" justifyContent="center" alignItems="center" alignContent="center">
             <Typography variant="h1" align="center"> 
               Paycheck
             </Typography>
           </Box>
+
+          <Grid container className={classes.root} spacing={2}>
+            <Grid item xs={12}>
+              <Grid container justify="center" spacing={5}>
+                <Grid key="income" item>
+                  <ValueCard label="Income" amount={currentMonthTotals.revenue} currency={currentMonthTotals.currency} />
+                </Grid>
+                <Grid key="expenses" item>
+                  <ValueCard label="Expenses" amount={currentMonthTotals.cost} currency={currentMonthTotals.currency} />
+                </Grid>
+                <Grid key="netEarnings" item>
+                  <ValueCard label="Net earnings" amount={currentMonthTotals.revenue - currentMonthTotals.cost} currency={currentMonthTotals.currency} textColor={currentMonthTotals.revenue < currentMonthTotals.cost ? "error" : undefined}/>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+          
 
          <Paper className={classes.paper}>
            <Chart data={currentMonthCosts}>
