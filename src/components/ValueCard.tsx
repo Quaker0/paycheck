@@ -1,6 +1,7 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
+import Grow from "@material-ui/core/Grow";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 
@@ -32,15 +33,17 @@ export default function ValueCard(props: Props) {
   const classes = useStyles();
   const { label, amount, currency, textColor } = props;
   return (
-    <Card className={classes.root} color="error">
-      <CardContent>
-        <Typography className={classes.title} color={textColor || "textSecondary"}>
-          {label}
-        </Typography>
-        <Typography variant="h5" component="h2">
-          {prettyAmount(amount)} {currency}
-        </Typography>
-      </CardContent>
-    </Card>
+    <Grow in={amount !== 0}>
+      <Card className={classes.root} color="error">
+        <CardContent>
+          <Typography className={classes.title} color={textColor || "textSecondary"}>
+            {label}
+          </Typography>
+          <Typography variant="h5" component="h2">
+            {prettyAmount(amount)} {currency}
+          </Typography>
+        </CardContent>
+      </Card>
+    </Grow>
   );
 }
