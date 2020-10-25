@@ -20,7 +20,7 @@ export function parseMonthlyTransactions(transactions: Array<Array<String|number
     monthTransactions.push(transactions[i])
     if (transactions[i][labelIdx] === "Lön") {
       salary = parseInt(transactions[i][valueIdx].toString());
-      if (monthTransactions.length > 1) {
+      if (monthTransactions.length > 1 && !parseInt(transactions[i][labelIdx].toString())) {
         monthlyTransactions.push({transactions: monthTransactions, salary: salary})
         monthTransactions = [];
       }
@@ -44,8 +44,8 @@ export function parseCostTransactions(headers: Array<String>, monthlyTransaction
 export function calcMonthTotals(headers: Array<String>, monthlyTransaction: MonthlyTransaction): TransactionTotals {
   const dateIdx = headers.indexOf("Bokföringsdag");
   const valueIdx = headers.indexOf("Belopp");
-  const currency = monthlyTransaction.transactions[0][headers.indexOf("Valuta")];
-  
+  const currency = monthlyTransaction.transactions[0][headers.indexOf("Valuta")];  
+
   let sortedTransactions = monthlyTransaction.transactions.sort((a, b) => {
     if (a[dateIdx] === b[dateIdx]) { return 0} ;
     return Date.parse(a[dateIdx].toString()) > Date.parse(b[dateIdx].toString()) ? 1 : -1;

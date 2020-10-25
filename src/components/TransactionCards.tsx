@@ -53,7 +53,7 @@ export default function TransactionCards(props: Props) {
   const classes = useStyles();
   const { transactions, transactionHeaders } = props;
   return (
-    <Grow in={transactions && transactions.length}>
+    <Grow in={!!(transactions && transactions.length)}>
       <Grid className={classes.root} container spacing={1}>
         {transactions && transactions.length && transactions.map((transaction: any, idx: number) => (
           <TransactionCard key={idx} transactions={transaction} headers={transactionHeaders} classes={classes} />
