@@ -3,6 +3,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import Card from "@material-ui/core/Card";
 import Grow from "@material-ui/core/Grow";
 import Grid from "@material-ui/core/Grid";
+import Button from "@material-ui/core/Button";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 
@@ -22,16 +23,23 @@ const useStyles = makeStyles({
   },
   content: {
     paddingTop: 25
+  },
+  inactiveContent: {
+    paddingTop: 25,
+    background: "grey"
   }
 });
 
 interface Props {
   transactions: any;
   transactionHeaders: any;
+  excludedTransactions: any,
+  excludeTransaction: any,
+  monthIdx: number
 }
 
 function TransactionCard(props: any) {
-  const { headers, transactions, classes } = props;
+  const { headers, transactions, onClick, excluded, classes } = props;
   const dateIdx = headers.indexOf("Bokföringsdag");
   const valueIdx = headers.indexOf("Belopp");
   const labelIdx = headers.indexOf("Rubrik");
@@ -39,9 +47,10 @@ function TransactionCard(props: any) {
   return (
     <Grid item xs={12}>
       <Card>
-        <CardContent className={classes.content}>
+        <CardContent className={excluded ? classes.inactiveContent : classes.content}>
           <Typography className={classes.text}>
             <strong>{transactions[dateIdx]}</strong> {transactions[labelIdx]} {transactions[valueIdx]} {transactions[currencyIdx]}
+            <Button variant="outlined" disabled={excluded} onClick={onClick}>Exclude</Button>
           </Typography>
         </CardContent>
       </Card>
@@ -51,13 +60,13 @@ function TransactionCard(props: any) {
 
 export default function TransactionCards(props: Props) {
   const classes = useStyles();
-  const { transactions, transactionHeaders } = props;
+  const { transactionHeaders, transactions, excludedTransactions, excludeTransaction, monthIdx } = props;
   return (
     <Grow in={!!(transactions && transactions.length)}>
       <Grid className={classes.root} container spacing={1}>
-        {transactions && transactions.length && transactions.map((transaction: any, idx: number) => (
-          <TransactionCard key={idx} transactions={transaction} headers={transactionHeaders} classes={classes} />
-        )).reverse()}
+        {transactions && transactions.length && transactions.map((transaction: any, idx: number) => {
+          return <TransactionCard key={idx} transactions={transaction} headers={transactionHeaders} classes={classes} onClick={() => excludeTransaction(monthIdx, idx)} excluded={excludedTransactions.includes(idx) }/>;
+        }).reverse()}
       </Grid>
     </Grow>
   );

@@ -35,10 +35,11 @@ interface Props {
 
 interface State {
   classes: any;
-  transactions: Array<Array<String>>;
+  transactionHeaders: Array<String>;
   monthlyTransactions: any;
   currentMonthCosts: any;
   currentMonthTotals: TransactionTotals;
+  excludedTransactions: Array<number>;
   hoverFile: Boolean;
   stoppedHover: any;
 }
@@ -48,10 +49,12 @@ class App extends Component<Props, State> {
     super(props);
     this.state = this.originalState();
     this.loadTransactions = this.loadTransactions.bind(this)
+    this.loadTransactionCalcs = this.loadTransactionCalcs.bind(this)
+    this.excludeTransaction = this.excludeTransaction.bind(this)
   }
 
   originalState = () => {
-    return {transactions: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], currentMonthTotals: {cost: 0, revenue: 0, currency: ""}, hoverFile: false, stoppedHover: null}
+    return {transactionHeaders: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], currentMonthTotals: {cost: 0, revenue: 0, currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
   }
 
   onDragOver = (event: any) => {
@@ -88,19 +91,39 @@ class App extends Component<Props, State> {
   loadTransactions(dataset: any) {
     const transactions = dataset.split("\n").map((data: any) => data.split(";"));
     const monthlyTransactions = parseMonthlyTransactions(transactions);
-    const monthlyCostTransaction = parseCostTransactions(transactions[0], monthlyTransactions[0]);
-    const currentMonthTotals = calcMonthTotals(transactions[0], monthlyTransactions[0]);
-    const currentMonthCosts = calcMonthCosts(transactions[0], monthlyCostTransaction);
-    this.setState({transactions: transactions, monthlyTransactions: monthlyTransactions, currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals})
+    this.loadTransactionCalcs(transactions[0], monthlyTransactions);
+    this.setState({transactionHeaders: transactions[0], monthlyTransactions: monthlyTransactions});
+  }
+
+  loadTransactionCalcs(transactionHeaders: Array<String>, monthlyTransactions: any) {
+    console.log(monthlyTransactions[0].transactions.length);
+    const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[0]);
+    const currentMonthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions[0]);
+    console.log(currentMonthTotals)
+    const currentMonthCosts = calcMonthCosts(transactionHeaders, currentCostTransactions);
+    this.setState({currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals});
+  }
+
+  excludeTransaction(monthIdx: number, transactionIdx: number) {
+    let excludedTransactions = this.state.excludedTransactions.concat([transactionIdx]);
+    console.log(excludedTransactions);
+    this.setState({excludedTransactions: excludedTransactions});
+    let monthlyTransactions = this.state.monthlyTransactions.slice()
+    let monthTransactions = monthlyTransactions[monthIdx].transactions.slice();
+    excludedTransactions.forEach(idx => {
+      console.log(monthTransactions[idx])
+      monthTransactions.splice(idx, 1)
+    });
+    monthlyTransactions[monthIdx] = {salary: monthlyTransactions[monthIdx].salary, transactions: monthTransactions}
+    this.loadTransactionCalcs(this.state.transactionHeaders, monthlyTransactions);
   }
 
   render() {
-    const { classes, transactions, monthlyTransactions, currentMonthCosts, currentMonthTotals, hoverFile } = this.state;
-
+    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, currentMonthTotals, excludedTransactions, hoverFile } = this.state;
 
     return (
       <ThemeProvider theme={theme}>
-        {transactions.length ? <Box position="absolute" top={20} right={20}><Button onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button></Box> : <></>}
+        {monthlyTransactions.length ? <Box position="absolute" top={20} right={20}><Button onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button></Box> : <></>}
         <div className={classes.root} 
           onDrop={this.onFileDrop}
           onDragEnter={this.onDragEnter}
@@ -126,7 +149,7 @@ class App extends Component<Props, State> {
          ) : <Box color={hoverFile ? "success.main" : "text.secondary"}><Typography variant="h5" align="center">Drag and drop your csv transaction file here</Typography></Box>
         }
 
-          <TransactionCards transactionHeaders={transactions[0]} transactions={monthlyTransactions[0] && monthlyTransactions[0].transactions} />
+          <TransactionCards transactionHeaders={transactionHeaders} transactions={monthlyTransactions[0] && monthlyTransactions[0].transactions} excludedTransactions={excludedTransactions} excludeTransaction={this.excludeTransaction} monthIdx={0}/>
         </div>
       </ThemeProvider>
     );
