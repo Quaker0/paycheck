@@ -77,27 +77,50 @@ export function calculateRecurring(transactionHeaders: Array<String>, monthlyTra
     return {monthlyTotals: monthlyTotals, currency: currency}
   }
 
-export function calcMonthTotals(headers: Array<String>, monthlyTransaction: MonthlyTransaction): TransactionTotals {
+export function calcMonthTotals(headers: Array<String>, monthlyTransactions: Array<MonthlyTransaction>): Array<TransactionTotals> {
   const dateIdx = headers.indexOf("Bokföringsdag");
   const valueIdx = headers.indexOf("Belopp");
-  const currency = monthlyTransaction.transactions[0][headers.indexOf("Valuta")];  
+  const currency = monthlyTransactions[0].transactions[0][headers.indexOf("Valuta")];
 
-  let sortedTransactions = monthlyTransaction.transactions.sort((a, b) => {
-    if (a[dateIdx] === b[dateIdx]) { return 0} ;
-    return Date.parse(a[dateIdx].toString()) > Date.parse(b[dateIdx].toString()) ? 1 : -1;
+  return monthlyTransactions.map(monthlyTransaction => {
+    let sortedTransactions = monthlyTransaction.transactions.sort((a, b) => {
+      if (a[dateIdx] === b[dateIdx]) { return 0} ;
+      return Date.parse(a[dateIdx].toString()) > Date.parse(b[dateIdx].toString()) ? 1 : -1;
+    });
+
+    let totals = {cost: 0, revenue: 0, currency: currency.toString()};
+    sortedTransactions.some(tx => {
+      let txDate = new Date(tx[dateIdx].toString());
+      if (txDate.getDate() === (new Date()).getDate()) {
+        return true;
+      }
+      const txValue = parseInt(tx[valueIdx].toString());
+      if (txValue > 0) {
+        totals.revenue += txValue;
+      }
+      else if (txValue < 0) {
+        totals.cost -= txValue
+      }
+      return null
+    });
+    return totals;
+  });
+}
+
+
+export function median(values: Array<number>){
+  if(values.length ===0) return 0;
+
+  values.sort(function(a,b){
+    return a-b;
   });
 
-  let totals = {cost: 0, revenue: 0, currency: currency.toString()};
-  sortedTransactions.forEach(tx => {
-    const txValue = parseInt(tx[valueIdx].toString());
-    if (txValue > 0) {
-      totals.revenue += txValue;
-    }
-    else if (txValue < 0) {
-      totals.cost -= txValue
-    }
-  });
-  return totals;
+  var half = Math.floor(values.length / 2);
+
+  if (values.length % 2)
+    return values[half];
+
+  return (values[half - 1] + values[half]) / 2.0;
 }
 
 
@@ -121,9 +144,13 @@ export function calcMonthCosts(headers: Array<String>, monthlyTransaction: Month
   }).filter(Boolean);
 }
 
+function _avg(values: Array<number>) {
+  return Math.round(values.reduce((a: number, b: number) => a + b, 0) / values.length)
+}
+
 export function calcAvg(values: Array<number>) {
   if (values.length > 0) {
-    return Math.round(values.reduce((a: number, b: number) => a + b, 0) / values.length)
+    return _avg(values.filter((val: number) => val < 2 * median(values)));
   }
   return 0;
 }

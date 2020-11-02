@@ -38,7 +38,7 @@ interface State {
   transactionHeaders: Array<String>;
   monthlyTransactions: any;
   currentMonthCosts: any;
-  currentMonthTotals: TransactionTotals;
+  monthTotals: Array<TransactionTotals>;
   monthlyRecurring: any;
   excludedTransactions: Array<number>;
   hoverFile: Boolean;
@@ -57,7 +57,7 @@ class App extends Component<Props, State> {
   }
 
   originalState = () => {
-    return {transactionHeaders: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], currentMonthTotals: {cost: 0, revenue: 0, currency: ""}, monthlyRecurring: {monthlyTotals: [0], currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
+    return {transactionHeaders: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], monthTotals: [{cost: 0, revenue: 0, currency: ""}], monthlyRecurring: {monthlyTotals: [0], currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
   }
 
   onDragOver = (event: any) => {
@@ -100,10 +100,10 @@ class App extends Component<Props, State> {
 
   loadTransactionCalcs(transactionHeaders: Array<String>, monthlyTransactions: any) {
     const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[0]);
-    const currentMonthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions[0]);
+    const monthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions);
     const currentMonthCosts = calcMonthCosts(transactionHeaders, currentCostTransactions);
     const monthlyRecurring = calculateRecurring(transactionHeaders, monthlyTransactions)
-    this.setState({currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals, monthlyRecurring: monthlyRecurring});
+    this.setState({currentMonthCosts: currentMonthCosts, monthTotals: monthTotals, monthlyRecurring: monthlyRecurring});
   }
 
   excludeTransaction(monthIdx: number, transactionIdx: number) {
@@ -127,7 +127,7 @@ class App extends Component<Props, State> {
   }
 
   render() {
-    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, currentMonthTotals, monthlyRecurring, excludedTransactions, hoverFile } = this.state;
+    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, monthTotals, monthlyRecurring, excludedTransactions, hoverFile } = this.state;
     return (
       <ThemeProvider theme={theme}>
         {monthlyTransactions.length ? <Box position="absolute" top={20} right={20}><Button onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button></Box> : <></>}
@@ -144,7 +144,7 @@ class App extends Component<Props, State> {
             </Typography>
           </Box>
 
-          <OverviewCards classes={classes} currentMonthTotals={currentMonthTotals} monthlyRecurring={monthlyRecurring}/>
+          <OverviewCards classes={classes} monthTotals={monthTotals} monthlyRecurring={monthlyRecurring}/>
         { currentMonthCosts.length ? (
           <Paper className={classes.paper}>
             <Chart data={currentMonthCosts} height={400}>
