@@ -48,9 +48,11 @@ class App extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = this.originalState();
-    this.loadTransactions = this.loadTransactions.bind(this)
-    this.loadTransactionCalcs = this.loadTransactionCalcs.bind(this)
-    this.excludeTransaction = this.excludeTransaction.bind(this)
+    this.loadTransactions = this.loadTransactions.bind(this);
+    this.loadTransactionCalcs = this.loadTransactionCalcs.bind(this);
+    this.excludeTransaction = this.excludeTransaction.bind(this);
+    this.includeTransaction = this.includeTransaction.bind(this);
+    this.updateMonthlyTransaction = this.updateMonthlyTransaction.bind(this);
   }
 
   originalState = () => {
@@ -91,36 +93,39 @@ class App extends Component<Props, State> {
   loadTransactions(dataset: any) {
     const transactions = dataset.split("\n").map((data: any) => data.split(";"));
     const monthlyTransactions = parseMonthlyTransactions(transactions);
+    this.setState({transactionHeaders: transactions[0], monthlyTransactions: monthlyTransactions, excludedTransactions: []});
     this.loadTransactionCalcs(transactions[0], monthlyTransactions);
-    this.setState({transactionHeaders: transactions[0], monthlyTransactions: monthlyTransactions});
   }
 
   loadTransactionCalcs(transactionHeaders: Array<String>, monthlyTransactions: any) {
-    console.log(monthlyTransactions[0].transactions.length);
     const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[0]);
     const currentMonthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions[0]);
-    console.log(currentMonthTotals)
     const currentMonthCosts = calcMonthCosts(transactionHeaders, currentCostTransactions);
     this.setState({currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals});
   }
 
   excludeTransaction(monthIdx: number, transactionIdx: number) {
     let excludedTransactions = this.state.excludedTransactions.concat([transactionIdx]);
-    console.log(excludedTransactions);
     this.setState({excludedTransactions: excludedTransactions});
+    this.updateMonthlyTransaction(monthIdx, excludedTransactions)
+  }
+
+  includeTransaction(monthIdx: number, transactionIdx: number) {
+    let excludedTransactions = this.state.excludedTransactions.filter((x: number) => x !== transactionIdx);
+    this.setState({excludedTransactions: excludedTransactions});
+    this.updateMonthlyTransaction(monthIdx, excludedTransactions)
+  }
+
+  updateMonthlyTransaction(monthIdx: number, excludedTransactions: Array<number>) {
     let monthlyTransactions = this.state.monthlyTransactions.slice()
     let monthTransactions = monthlyTransactions[monthIdx].transactions.slice();
-    excludedTransactions.forEach(idx => {
-      console.log(monthTransactions[idx])
-      monthTransactions.splice(idx, 1)
-    });
+    excludedTransactions.forEach(idx => { monthTransactions.splice(idx, 1) });
     monthlyTransactions[monthIdx] = {salary: monthlyTransactions[monthIdx].salary, transactions: monthTransactions}
     this.loadTransactionCalcs(this.state.transactionHeaders, monthlyTransactions);
   }
 
   render() {
     const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, currentMonthTotals, excludedTransactions, hoverFile } = this.state;
-
     return (
       <ThemeProvider theme={theme}>
         {monthlyTransactions.length ? <Box position="absolute" top={20} right={20}><Button onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button></Box> : <></>}
@@ -140,7 +145,7 @@ class App extends Component<Props, State> {
           <OverviewCards classes={classes} currentMonthTotals={currentMonthTotals} />
         { currentMonthCosts.length ? (
           <Paper className={classes.paper}>
-            <Chart data={currentMonthCosts}>
+            <Chart data={currentMonthCosts} height={400}>
               <ArgumentAxis showLine showTicks/>
               <ValueAxis showLine showTicks/>
               <LineSeries valueField="value" argumentField="date" />
@@ -149,7 +154,7 @@ class App extends Component<Props, State> {
          ) : <Box color={hoverFile ? "success.main" : "text.secondary"}><Typography variant="h5" align="center">Drag and drop your csv transaction file here</Typography></Box>
         }
 
-          <TransactionCards transactionHeaders={transactionHeaders} transactions={monthlyTransactions[0] && monthlyTransactions[0].transactions} excludedTransactions={excludedTransactions} excludeTransaction={this.excludeTransaction} monthIdx={0}/>
+          <TransactionCards transactionHeaders={transactionHeaders} transactions={monthlyTransactions[0] && monthlyTransactions[0].transactions} excludedTransactions={excludedTransactions} excludeTransaction={this.excludeTransaction} includeTransaction={this.includeTransaction} monthIdx={0}/>
         </div>
       </ThemeProvider>
     );

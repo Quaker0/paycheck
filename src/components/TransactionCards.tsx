@@ -17,6 +17,13 @@ const useStyles = makeStyles({
     fontSize: 14,
     margin: 0
   },
+  button: {
+    margin: 0,
+    background: "white",
+    "&:hover, &:focus": {
+      background: "white"
+    }
+  },
   box: {
     width: "100%",
     margin: 0,
@@ -38,6 +45,7 @@ interface Props {
   transactions: any;
   transactionHeaders: any;
   excludedTransactions: any,
+  includeTransaction: any,
   excludeTransaction: any,
   monthIdx: number
 }
@@ -62,7 +70,7 @@ function TransactionCard(props: any) {
             <Typography className={classes.item}>
               {transactions[valueIdx]} {transactions[currencyIdx]}
             </Typography>
-            <Button variant="outlined" disabled={excluded} onClick={onClick} className={classes.item}>Exclude</Button>
+            <Button variant="outlined" onClick={onClick} className={classes.button}>{excluded ? "Include" : "Exclude"}</Button>
           </Box>
         </CardContent>
       </Card>
@@ -72,12 +80,12 @@ function TransactionCard(props: any) {
 
 export default function TransactionCards(props: Props) {
   const classes = useStyles();
-  const { transactionHeaders, transactions, excludedTransactions, excludeTransaction, monthIdx } = props;
+  const { transactionHeaders, transactions, excludedTransactions, excludeTransaction, includeTransaction, monthIdx } = props;
   return (
     <Grow in={!!(transactions && transactions.length)}>
       <Grid className={classes.root} container spacing={1}>
         {transactions && transactions.length && transactions.map((transaction: any, idx: number) => {
-          return <TransactionCard key={idx} transactions={transaction} headers={transactionHeaders} classes={classes} onClick={() => excludeTransaction(monthIdx, idx)} excluded={excludedTransactions.includes(idx) }/>;
+          return <TransactionCard key={idx} transactions={transaction} headers={transactionHeaders} classes={classes} onClick={() => excludedTransactions.includes(idx) ? includeTransaction(monthIdx, idx) : excludeTransaction(monthIdx, idx)} excluded={excludedTransactions.includes(idx)}/>;
         }).reverse()}
       </Grid>
     </Grow>
