@@ -4,6 +4,7 @@ import Card from "@material-ui/core/Card";
 import Grow from "@material-ui/core/Grow";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
+import Box from "@material-ui/core/Box";
 import CardContent from "@material-ui/core/CardContent";
 import Typography from "@material-ui/core/Typography";
 
@@ -12,8 +13,11 @@ const useStyles = makeStyles({
     width: "100%",
     padding: 50
   },
-  text: {
+  item: {
     fontSize: 14,
+    margin: 0
+  },
+  box: {
     width: "100%",
     margin: 0,
     padding: 0
@@ -48,10 +52,18 @@ function TransactionCard(props: any) {
     <Grid item xs={12}>
       <Card>
         <CardContent className={excluded ? classes.inactiveContent : classes.content}>
-          <Typography className={classes.text}>
-            <strong>{transactions[dateIdx]}</strong> {transactions[labelIdx]} {transactions[valueIdx]} {transactions[currencyIdx]}
-            <Button variant="outlined" disabled={excluded} onClick={onClick}>Exclude</Button>
-          </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexDirection="row">
+            <Typography className={classes.item}>
+              <strong>{transactions[dateIdx]}</strong>
+            </Typography>
+            <Typography className={classes.item}>
+              {transactions[labelIdx]}
+            </Typography>
+            <Typography className={classes.item}>
+              {transactions[valueIdx]} {transactions[currencyIdx]}
+            </Typography>
+            <Button variant="outlined" disabled={excluded} onClick={onClick} className={classes.item}>Exclude</Button>
+          </Box>
         </CardContent>
       </Card>
     </Grid>
