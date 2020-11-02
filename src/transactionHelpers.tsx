@@ -40,6 +40,42 @@ export function parseCostTransactions(headers: Array<String>, monthlyTransaction
   return {transactions: costTransactions, salary: monthlyTransaction.salary };
 }
 
+export function calculateRecurring(transactionHeaders: Array<String>, monthlyTransactions: any) {
+    let transactionMap: any = {};
+    const valueIdx = transactionHeaders.indexOf("Belopp");
+    const dateIdx = transactionHeaders.indexOf("Bokföringsdag");
+    const labelIdx = transactionHeaders.indexOf("Rubrik");
+    const currency = monthlyTransactions[0].transactions[0][transactionHeaders.indexOf("Valuta")];
+    monthlyTransactions.forEach((mt: any) => {
+      let monthlyTransactionMap: any = {};
+      mt.transactions.forEach((transaction: Array<String>) => {
+        if (transaction[labelIdx] !== "Lön") {
+          monthlyTransactionMap[transaction[labelIdx].toString()] = {date: transaction[dateIdx], value: -parseInt(transaction[valueIdx].toString())};
+        }
+      });
+      if (!Object.keys(transactionMap).length) {
+        transactionMap = monthlyTransactionMap;
+      }
+      else {
+        Object.keys(transactionMap).forEach((key: string) => {
+          if (!(key in monthlyTransactionMap)) {
+            delete transactionMap[key];
+          }
+          else {
+            let dComp = new Date(transactionMap[key].date);
+            let d = new Date(monthlyTransactionMap[key].date)
+            if ( d.getDate() < dComp.getDate() - 2 || d.getDate() > dComp.getDate() + 2) {
+              delete transactionMap[key];
+            }
+          }
+        });
+      }
+    });
+    let monthlyTotals = monthlyTransactions.map((mt: any) => {
+      return mt.transactions.map((tx: Array<String>) => tx[labelIdx].toString() in transactionMap ? -parseInt(tx[valueIdx].toString()) : null).filter(Boolean).reduce((a: number, b: number) => a + b, 0);
+    });
+    return {monthlyTotals: monthlyTotals, currency: currency}
+  }
 
 export function calcMonthTotals(headers: Array<String>, monthlyTransaction: MonthlyTransaction): TransactionTotals {
   const dateIdx = headers.indexOf("Bokföringsdag");
@@ -83,4 +119,11 @@ export function calcMonthCosts(headers: Array<String>, monthlyTransaction: Month
     }
     return undefined;
   }).filter(Boolean);
+}
+
+export function calcAvg(values: Array<number>) {
+  if (values.length > 0) {
+    return Math.round(values.reduce((a: number, b: number) => a + b, 0) / values.length)
+  }
+  return 0;
 }

@@ -7,7 +7,7 @@ import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import { ThemeProvider, withStyles } from "@material-ui/core/styles";
 import createMuiTheme from "@material-ui/core/styles/createMuiTheme";
-import { calcMonthCosts, calcMonthTotals, parseMonthlyTransactions, parseCostTransactions, TransactionTotals} from "./transactionHelpers";
+import { calcMonthCosts, calcMonthTotals, calculateRecurring, parseMonthlyTransactions, parseCostTransactions, TransactionTotals} from "./transactionHelpers";
 import { ArgumentAxis, ValueAxis, Chart, LineSeries } from "@devexpress/dx-react-chart-material-ui";
 import OverviewCards from "./components/OverviewCards";
 import TransactionCards from "./components/TransactionCards";
@@ -39,6 +39,7 @@ interface State {
   monthlyTransactions: any;
   currentMonthCosts: any;
   currentMonthTotals: TransactionTotals;
+  monthlyRecurring: any;
   excludedTransactions: Array<number>;
   hoverFile: Boolean;
   stoppedHover: any;
@@ -56,7 +57,7 @@ class App extends Component<Props, State> {
   }
 
   originalState = () => {
-    return {transactionHeaders: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], currentMonthTotals: {cost: 0, revenue: 0, currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
+    return {transactionHeaders: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], currentMonthTotals: {cost: 0, revenue: 0, currency: ""}, monthlyRecurring: {monthlyTotals: [0], currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
   }
 
   onDragOver = (event: any) => {
@@ -101,7 +102,8 @@ class App extends Component<Props, State> {
     const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[0]);
     const currentMonthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions[0]);
     const currentMonthCosts = calcMonthCosts(transactionHeaders, currentCostTransactions);
-    this.setState({currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals});
+    const monthlyRecurring = calculateRecurring(transactionHeaders, monthlyTransactions)
+    this.setState({currentMonthCosts: currentMonthCosts, currentMonthTotals: currentMonthTotals, monthlyRecurring: monthlyRecurring});
   }
 
   excludeTransaction(monthIdx: number, transactionIdx: number) {
@@ -125,7 +127,7 @@ class App extends Component<Props, State> {
   }
 
   render() {
-    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, currentMonthTotals, excludedTransactions, hoverFile } = this.state;
+    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, currentMonthTotals, monthlyRecurring, excludedTransactions, hoverFile } = this.state;
     return (
       <ThemeProvider theme={theme}>
         {monthlyTransactions.length ? <Box position="absolute" top={20} right={20}><Button onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button></Box> : <></>}
@@ -142,7 +144,7 @@ class App extends Component<Props, State> {
             </Typography>
           </Box>
 
-          <OverviewCards classes={classes} currentMonthTotals={currentMonthTotals} />
+          <OverviewCards classes={classes} currentMonthTotals={currentMonthTotals} monthlyRecurring={monthlyRecurring}/>
         { currentMonthCosts.length ? (
           <Paper className={classes.paper}>
             <Chart data={currentMonthCosts} height={400}>
