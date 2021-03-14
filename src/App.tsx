@@ -12,6 +12,8 @@ import { ArgumentAxis, ValueAxis, Chart, LineSeries } from "@devexpress/dx-react
 import OverviewCards from "./components/OverviewCards";
 import TransactionCards from "./components/TransactionCards";
 import ClearIcon from "@material-ui/icons/Clear";
+import ChevronLeft from "@material-ui/icons/ChevronLeft";
+import ChevronRight from "@material-ui/icons/ChevronRight";
 
 const styles = (theme: any) => ({
   root: {
@@ -43,6 +45,7 @@ interface State {
   excludedTransactions: Array<number>;
   hoverFile: Boolean;
   stoppedHover: any;
+  selectedMonthIdx: number;
 }
 
 class App extends Component<Props, State> {
@@ -54,10 +57,11 @@ class App extends Component<Props, State> {
     this.excludeTransaction = this.excludeTransaction.bind(this);
     this.includeTransaction = this.includeTransaction.bind(this);
     this.updateMonthlyTransaction = this.updateMonthlyTransaction.bind(this);
+    this.updateSelectedMonthIndex = this.updateSelectedMonthIndex.bind(this);
   }
 
   originalState = () => {
-    return {transactionHeaders: [], classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], monthTotals: [{cost: 0, revenue: 0, currency: ""}], monthlyRecurring: {monthlyTotals: [0], currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
+    return {transactionHeaders: [], selectedMonthIdx: 0, classes: this.props.classes, monthlyTransactions: [], currentMonthCosts: [], monthTotals: [{cost: 0, revenue: 0, currency: ""}], monthlyRecurring: {monthlyTotals: [0], currency: ""}, excludedTransactions: [], hoverFile: false, stoppedHover: null}
   }
 
   onDragOver = (event: any) => {
@@ -94,12 +98,12 @@ class App extends Component<Props, State> {
   loadTransactions(dataset: any) {
     const transactions = dataset.split("\n").map((data: any) => data.split(";"));
     const monthlyTransactions = parseMonthlyTransactions(transactions);
-    this.setState({transactionHeaders: transactions[0], monthlyTransactions: monthlyTransactions, excludedTransactions: []});
+    this.setState({transactionHeaders: transactions[0], monthlyTransactions, excludedTransactions: []});
     this.loadTransactionCalcs(transactions[0], monthlyTransactions);
   }
 
-  loadTransactionCalcs(transactionHeaders: Array<String>, monthlyTransactions: any) {
-    const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[0]);
+  loadTransactionCalcs(transactionHeaders: Array<String>, monthlyTransactions: any, monthIdx: number = 0) {
+    const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[monthIdx]);
     const monthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions);
     const currentMonthCosts = calcMonthCosts(transactionHeaders, currentCostTransactions);
     const monthlyRecurring = calculateRecurring(transactionHeaders, monthlyTransactions)
@@ -126,11 +130,31 @@ class App extends Component<Props, State> {
     this.loadTransactionCalcs(this.state.transactionHeaders, monthlyTransactions);
   }
 
+  updateSelectedMonthIndex(increase: boolean) {
+    const { transactionHeaders, monthlyTransactions, selectedMonthIdx } = this.state;
+    const newMonthIdx = increase ? selectedMonthIdx - 1 : selectedMonthIdx + 1;
+    this.loadTransactionCalcs(transactionHeaders, monthlyTransactions, newMonthIdx);
+    this.setState({selectedMonthIdx: newMonthIdx})
+  }
+
   render() {
-    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, monthTotals, monthlyRecurring, excludedTransactions, hoverFile } = this.state;
+    const { classes, transactionHeaders, monthlyTransactions, currentMonthCosts, monthTotals, monthlyRecurring, excludedTransactions, hoverFile, selectedMonthIdx } = this.state;
     return (
       <ThemeProvider theme={theme}>
-        {monthlyTransactions.length ? <Box position="absolute" top={20} right={20}><Button onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button></Box> : <></>}
+        {
+          monthlyTransactions.length ? (
+            <>
+              <Box position="absolute" top={20} right={20}>
+                <Button disabled={selectedMonthIdx >= monthlyTransactions.length - 1} style={{margin: 10}} onClick={() => this.updateSelectedMonthIndex(false)} variant="contained"><ChevronLeft/></Button>
+                <Button disabled={selectedMonthIdx <= 0} style={{margin: 10}} onClick={() => this.updateSelectedMonthIndex(true)} variant="contained"><ChevronRight/></Button>
+                <Button style={{margin: 10}} onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button>
+              </Box>
+              <Box position="absolute" top={60} right={120}>
+                <p style={{color: 'white', textTransform: 'capitalize'}}>{monthlyTransactions[selectedMonthIdx].month}</p>
+              </Box>
+            </>
+          ) : <></>
+        }
         <div className={classes.root} 
           onDrop={this.onFileDrop}
           onDragEnter={this.onDragEnter}
@@ -144,7 +168,7 @@ class App extends Component<Props, State> {
             </Typography>
           </Box>
 
-          <OverviewCards classes={classes} monthTotals={monthTotals} monthlyRecurring={monthlyRecurring}/>
+          <OverviewCards classes={classes} monthTotals={monthTotals} monthlyRecurring={monthlyRecurring} monthIdx={selectedMonthIdx} />
         { currentMonthCosts.length ? (
           <Paper className={classes.paper}>
             <Chart data={currentMonthCosts} height={400}>
@@ -156,7 +180,7 @@ class App extends Component<Props, State> {
          ) : <Box color={hoverFile ? "success.main" : "text.secondary"}><Typography variant="h5" align="center">Drag and drop your csv transaction file here</Typography></Box>
         }
 
-          <TransactionCards transactionHeaders={transactionHeaders} transactions={monthlyTransactions[0] && monthlyTransactions[0].transactions} excludedTransactions={excludedTransactions} excludeTransaction={this.excludeTransaction} includeTransaction={this.includeTransaction} monthIdx={0}/>
+          <TransactionCards transactionHeaders={transactionHeaders} transactions={monthlyTransactions[selectedMonthIdx] && monthlyTransactions[selectedMonthIdx].transactions} excludedTransactions={excludedTransactions} excludeTransaction={this.excludeTransaction} includeTransaction={this.includeTransaction} monthIdx={selectedMonthIdx}/>
         </div>
       </ThemeProvider>
     );

@@ -1,6 +1,7 @@
 export interface MonthlyTransaction {
   transactions: Array<Array<String|number>>;
   salary: number;
+  month: string;
 }
 
 export interface TransactionTotals {
@@ -11,6 +12,7 @@ export interface TransactionTotals {
 
 export function parseMonthlyTransactions(transactions: Array<Array<String|number>>): Array<MonthlyTransaction> {
   const headers = transactions[0];
+  const dateIdx = headers.indexOf("Bokföringsdag");
   const valueIdx = headers.indexOf("Belopp");
   const labelIdx = headers.indexOf("Rubrik");
   let monthlyTransactions: Array<MonthlyTransaction> = [];
@@ -21,7 +23,8 @@ export function parseMonthlyTransactions(transactions: Array<Array<String|number
     if (transactions[i][labelIdx] === "Lön") {
       salary = parseInt(transactions[i][valueIdx].toString());
       if (monthTransactions.length > 1 && !parseInt(transactions[i][labelIdx].toString())) {
-        monthlyTransactions.push({transactions: monthTransactions, salary: salary})
+        const date = new Date(monthTransactions[0][dateIdx].toString());
+        monthlyTransactions.push({transactions: monthTransactions, salary: salary, month: date.toLocaleString('default', { month: 'long' })})
         monthTransactions = [];
       }
     }
@@ -37,7 +40,7 @@ export function parseCostTransactions(headers: Array<String>, monthlyTransaction
       costTransactions.push(tx);
     }
   });
-  return {transactions: costTransactions, salary: monthlyTransaction.salary };
+  return {transactions: costTransactions, salary: monthlyTransaction.salary, month: monthlyTransaction.month };
 }
 
 export function calculateRecurring(transactionHeaders: Array<String>, monthlyTransactions: any) {
@@ -99,9 +102,9 @@ export function calcMonthTotals(headers: Array<String>, monthlyTransactions: Arr
         totals.revenue += txValue;
       }
       else if (txValue < 0) {
-        totals.cost -= txValue
+        totals.cost -= txValue;
       }
-      return null
+      return null;
     });
     return totals;
   });

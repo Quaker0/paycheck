@@ -4,7 +4,7 @@ import Grid from "@material-ui/core/Grid";
 import { calcAvg } from "../transactionHelpers";
 
 export default function OverviewCards(props: any) {
-  const { classes, monthTotals, monthlyRecurring } = props;
+  const { classes, monthTotals, monthlyRecurring, monthIdx } = props;
   const monthlyRecurringAvg = calcAvg(monthlyRecurring.monthlyTotals.slice(1))
   const monthlyRevenueAvg = calcAvg(monthTotals.map((t: any) => t.revenue));
   const monthlyCostAvg = calcAvg(monthTotals.map((t: any) => t.cost));
@@ -13,16 +13,16 @@ export default function OverviewCards(props: any) {
       <Grid item xs={12}>
         <Grid container justify="center" spacing={5}>
           <Grid key="income" item>
-            <ValueCard label="Income" amount={monthTotals[0].revenue} avgAmount={monthlyRevenueAvg} currency={monthTotals[0].currency} />
+            <ValueCard label="Income" amount={monthTotals[monthIdx].revenue} avgAmount={monthlyRevenueAvg} currency={monthTotals[monthIdx].currency} />
           </Grid>
           <Grid key="expenses" item>
-            <ValueCard label="Expenses" amount={monthTotals[0].cost} avgAmount={monthlyCostAvg} currency={monthTotals[0].currency} lowerIsBetter />
+            <ValueCard label="Expenses" amount={monthTotals[monthIdx].cost} avgAmount={monthlyCostAvg} currency={monthTotals[monthIdx].currency} lowerIsBetter />
           </Grid>
           <Grid key="netEarnings" item>
-            <ValueCard label="Net earnings" amount={monthTotals[0].revenue - monthTotals[0].cost} avgAmount={monthlyRevenueAvg - monthlyCostAvg} currency={monthTotals[0].currency} textColor={monthTotals[0].revenue < monthTotals[0].cost ? "error" : undefined}/>
+            <ValueCard label="Net earnings" amount={monthTotals[monthIdx].revenue - monthTotals[monthIdx].cost} avgAmount={monthlyRevenueAvg - monthlyCostAvg} currency={monthTotals[monthIdx].currency} textColor={monthTotals[monthIdx].revenue < monthTotals[monthIdx].cost ? "error" : undefined}/>
           </Grid>
           <Grid key="currentRecurring" item>
-            <ValueCard label="Recurring expenses" amount={monthlyRecurring.monthlyTotals[0]} avgAmount={monthlyRecurringAvg} currency={monthlyRecurring.currency} lowerIsBetter />
+            <ValueCard label="Recurring expenses" amount={monthlyRecurring.monthlyTotals[monthIdx]} avgAmount={monthlyRecurringAvg} currency={monthlyRecurring.currency} lowerIsBetter />
           </Grid>
         </Grid>
       </Grid>
