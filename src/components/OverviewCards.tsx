@@ -12,18 +12,10 @@ export default function OverviewCards(props: any) {
     <Grid container className={classes.root} spacing={2}>
       <Grid item xs={12}>
         <Grid container justify="center" spacing={5}>
-          <Grid key="income" item>
             <ValueCard label="Income" amount={monthTotals[monthIdx].revenue} avgAmount={monthlyRevenueAvg} currency={monthTotals[monthIdx].currency} />
-          </Grid>
-          <Grid key="expenses" item>
             <ValueCard label="Expenses" amount={monthTotals[monthIdx].cost} avgAmount={monthlyCostAvg} currency={monthTotals[monthIdx].currency} lowerIsBetter />
-          </Grid>
-          <Grid key="netEarnings" item>
             <ValueCard label="Net earnings" amount={monthTotals[monthIdx].revenue - monthTotals[monthIdx].cost} avgAmount={monthlyRevenueAvg - monthlyCostAvg} currency={monthTotals[monthIdx].currency} textColor={monthTotals[monthIdx].revenue < monthTotals[monthIdx].cost ? "error" : undefined}/>
-          </Grid>
-          <Grid key="currentRecurring" item>
             <ValueCard label="Recurring expenses" amount={monthlyRecurring.monthlyTotals[monthIdx]} avgAmount={monthlyRecurringAvg} currency={monthlyRecurring.currency} lowerIsBetter />
-          </Grid>
         </Grid>
       </Grid>
     </Grid>

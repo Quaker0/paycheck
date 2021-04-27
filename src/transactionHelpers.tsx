@@ -1,7 +1,7 @@
 export interface MonthlyTransaction {
   transactions: Array<Array<String|number>>;
   salary: number;
-  month: string;
+  period: string;
 }
 
 export interface TransactionTotals {
@@ -23,8 +23,11 @@ export function parseMonthlyTransactions(transactions: Array<Array<String|number
     if (transactions[i][labelIdx] === "Lön") {
       salary = parseInt(transactions[i][valueIdx].toString());
       if (monthTransactions.length > 1 && !parseInt(transactions[i][labelIdx].toString())) {
-        const date = new Date(monthTransactions[0][dateIdx].toString());
-        monthlyTransactions.push({transactions: monthTransactions, salary: salary, month: date.toLocaleString('default', { month: 'long' })})
+        const lastDate = new Date(monthTransactions[0][dateIdx].toString());
+        const firstDate = new Date(monthTransactions[monthTransactions.length-1][dateIdx].toString());
+        const prettyDate = (d: Date) => d.toLocaleString('default', { month: 'long', day: 'numeric'});
+        const period = `${prettyDate(firstDate)} - ${prettyDate(lastDate)}`
+        monthlyTransactions.push({transactions: monthTransactions, salary: salary, period})
         monthTransactions = [];
       }
     }
@@ -40,7 +43,7 @@ export function parseCostTransactions(headers: Array<String>, monthlyTransaction
       costTransactions.push(tx);
     }
   });
-  return {transactions: costTransactions, salary: monthlyTransaction.salary, month: monthlyTransaction.month };
+  return {transactions: costTransactions, salary: monthlyTransaction.salary, period: monthlyTransaction.period };
 }
 
 export function calculateRecurring(transactionHeaders: Array<String>, monthlyTransactions: any) {
@@ -92,11 +95,7 @@ export function calcMonthTotals(headers: Array<String>, monthlyTransactions: Arr
     });
 
     let totals = {cost: 0, revenue: 0, currency: currency.toString()};
-    sortedTransactions.some(tx => {
-      let txDate = new Date(tx[dateIdx].toString());
-      if (txDate.getDate() === (new Date()).getDate()) {
-        return true;
-      }
+    sortedTransactions.forEach(tx => {
       const txValue = parseInt(tx[valueIdx].toString());
       if (txValue > 0) {
         totals.revenue += txValue;
@@ -104,7 +103,6 @@ export function calcMonthTotals(headers: Array<String>, monthlyTransactions: Arr
       else if (txValue < 0) {
         totals.cost -= txValue;
       }
-      return null;
     });
     return totals;
   });

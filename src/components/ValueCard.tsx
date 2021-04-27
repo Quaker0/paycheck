@@ -1,5 +1,6 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
+import Grid from "@material-ui/core/Grid";
 import Card from "@material-ui/core/Card";
 import Grow from "@material-ui/core/Grow";
 import Box from "@material-ui/core/Box";
@@ -51,24 +52,30 @@ export default function ValueCard(props: Props) {
   const classes = useStyles();
   const { label, amount, avgAmount, currency, textColor, lowerIsBetter } = props;
   const changedAmount = amount - (avgAmount || 0);
+  if (amount === 0) {
+    return null;
+  }
+
   return (
-    <Grow in={amount !== 0}>
-      <Card className={classes.root} color="error">
-        <CardContent>
-          { avgAmount ? (
-            <Typography className={(lowerIsBetter ? changedAmount < 0 : changedAmount > 0) ? classes.compareTextPos : classes.compareTextNeg}>
-              <Box display="flex" flexDirection="row" alignItems="center" component="title">{changedAmount > 0 ? <ArrowUpIcon/> : <ArrowDownIcon/>} {prettyAmount(Math.abs(changedAmount))}</Box>
+    <Grid item>
+      <Grow in>
+        <Card className={classes.root} color="error">
+          <CardContent>
+            { avgAmount ? (
+              <Typography className={(lowerIsBetter ? changedAmount < 0 : changedAmount > 0) ? classes.compareTextPos : classes.compareTextNeg}>
+                <Box display="flex" flexDirection="row" alignItems="center" component="title">{changedAmount > 0 ? <ArrowUpIcon/> : <ArrowDownIcon/>} {prettyAmount(Math.abs(changedAmount))}</Box>
+              </Typography>
+             ) : <></>
+            }
+            <Typography className={classes.title} color={textColor || "textSecondary"}>
+              {label}
             </Typography>
-           ) : <></>
-          }
-          <Typography className={classes.title} color={textColor || "textSecondary"}>
-            {label}
-          </Typography>
-          <Typography variant="h5" component="h2">
-            {prettyAmount(amount)} {currency}
-          </Typography>
-        </CardContent>
-      </Card>
-    </Grow>
+            <Typography variant="h5" component="h2">
+              {prettyAmount(amount)} {currency}
+            </Typography>
+          </CardContent>
+        </Card>
+      </Grow>
+    </Grid>
   );
 }

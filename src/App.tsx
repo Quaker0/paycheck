@@ -104,9 +104,11 @@ class App extends Component<Props, State> {
 
   loadTransactionCalcs(transactionHeaders: Array<String>, monthlyTransactions: any, monthIdx: number = 0) {
     const currentCostTransactions = parseCostTransactions(transactionHeaders, monthlyTransactions[monthIdx]);
-    const monthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions);
     const currentMonthCosts = calcMonthCosts(transactionHeaders, currentCostTransactions);
+
+    const monthTotals = calcMonthTotals(transactionHeaders, monthlyTransactions);
     const monthlyRecurring = calculateRecurring(transactionHeaders, monthlyTransactions)
+
     this.setState({currentMonthCosts: currentMonthCosts, monthTotals: monthTotals, monthlyRecurring: monthlyRecurring});
   }
 
@@ -123,11 +125,12 @@ class App extends Component<Props, State> {
   }
 
   updateMonthlyTransaction(monthIdx: number, excludedTransactions: Array<number>) {
-    let monthlyTransactions = this.state.monthlyTransactions.slice()
-    let monthTransactions = monthlyTransactions[monthIdx].transactions.slice();
-    excludedTransactions.forEach(idx => { monthTransactions.splice(idx, 1) });
-    monthlyTransactions[monthIdx] = {salary: monthlyTransactions[monthIdx].salary, transactions: monthTransactions}
-    this.loadTransactionCalcs(this.state.transactionHeaders, monthlyTransactions);
+    const { transactionHeaders, monthlyTransactions } = this.state;
+    let monthlyTransactionsCopy = monthlyTransactions.slice()
+    let monthTransactionsCopy = monthlyTransactionsCopy[monthIdx].transactions.slice();
+    excludedTransactions.forEach(idx => { monthTransactionsCopy.splice(idx, 1) });
+    monthlyTransactionsCopy[monthIdx] = {salary: monthlyTransactions[monthIdx].salary, transactions: monthTransactionsCopy}
+    this.loadTransactionCalcs(transactionHeaders, monthlyTransactionsCopy, monthIdx);
   }
 
   updateSelectedMonthIndex(increase: boolean) {
@@ -150,7 +153,7 @@ class App extends Component<Props, State> {
                 <Button style={{margin: 10}} onClick={() => this.setState(this.originalState())} variant="contained"><ClearIcon/></Button>
               </Box>
               <Box position="absolute" top={60} right={120}>
-                <p style={{color: 'white', textTransform: 'capitalize'}}>{monthlyTransactions[selectedMonthIdx].month}</p>
+                <p style={{color: 'white', textTransform: 'capitalize'}}>{monthlyTransactions[selectedMonthIdx].period}</p>
               </Box>
             </>
           ) : <></>
@@ -170,7 +173,7 @@ class App extends Component<Props, State> {
 
           <OverviewCards classes={classes} monthTotals={monthTotals} monthlyRecurring={monthlyRecurring} monthIdx={selectedMonthIdx} />
         { currentMonthCosts.length ? (
-          <Paper className={classes.paper}>
+          <Paper>
             <Chart data={currentMonthCosts} height={400}>
               <ArgumentAxis showLine showTicks/>
               <ValueAxis showLine showTicks/>
