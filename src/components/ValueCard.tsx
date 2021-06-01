@@ -1,13 +1,13 @@
-import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import Grid from "@material-ui/core/Grid";
-import Card from "@material-ui/core/Card";
-import Grow from "@material-ui/core/Grow";
 import Box from "@material-ui/core/Box";
+import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
+import Grid from "@material-ui/core/Grid";
+import Grow from "@material-ui/core/Grow";
+import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import ArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
 import ArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
+import ArrowUpIcon from "@material-ui/icons/KeyboardArrowUp";
+import React from "react";
 
 const useStyles = makeStyles({
   root: {
@@ -61,11 +61,11 @@ export default function ValueCard(props: Props) {
       <Grow in>
         <Card className={classes.root} color="error">
           <CardContent>
-            { avgAmount ? (
-              <Typography className={(lowerIsBetter ? changedAmount < 0 : changedAmount > 0) ? classes.compareTextPos : classes.compareTextNeg}>
-                <Box display="flex" flexDirection="row" alignItems="center" component="title">{changedAmount > 0 ? <ArrowUpIcon/> : <ArrowDownIcon/>} {prettyAmount(Math.abs(changedAmount))}</Box>
+            {avgAmount ? (
+              <Typography className={(lowerIsBetter ? changedAmount <= 0 : changedAmount >= 0) ? classes.compareTextPos : classes.compareTextNeg}>
+                <Box display="flex" flexDirection="row" alignItems="center" component="title">{(changedAmount === 0 && lowerIsBetter) || changedAmount < 0 ? <ArrowDownIcon /> : <ArrowUpIcon />} {prettyAmount(Math.abs(changedAmount))}</Box>
               </Typography>
-             ) : <></>
+            ) : <></>
             }
             <Typography className={classes.title} color={textColor || "textSecondary"}>
               {label}

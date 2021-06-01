@@ -1,7 +1,7 @@
-import React from "react";
-import ValueCard from "./ValueCard";
 import Grid from "@material-ui/core/Grid";
+import React from "react";
 import { calcAvg } from "../transactionHelpers";
+import ValueCard from "./ValueCard";
 
 export default function OverviewCards(props: any) {
   const { classes, monthTotals, monthlyRecurring, monthIdx } = props;
@@ -12,10 +12,10 @@ export default function OverviewCards(props: any) {
     <Grid container className={classes.root} spacing={2}>
       <Grid item xs={12}>
         <Grid container justify="center" spacing={5}>
-            <ValueCard label="Income" amount={monthTotals[monthIdx].revenue} avgAmount={monthlyRevenueAvg} currency={monthTotals[monthIdx].currency} />
-            <ValueCard label="Expenses" amount={monthTotals[monthIdx].cost} avgAmount={monthlyCostAvg} currency={monthTotals[monthIdx].currency} lowerIsBetter />
-            <ValueCard label="Net earnings" amount={monthTotals[monthIdx].revenue - monthTotals[monthIdx].cost} avgAmount={monthlyRevenueAvg - monthlyCostAvg} currency={monthTotals[monthIdx].currency} textColor={monthTotals[monthIdx].revenue < monthTotals[monthIdx].cost ? "error" : undefined}/>
-            <ValueCard label="Recurring expenses" amount={monthlyRecurring.monthlyTotals[monthIdx]} avgAmount={monthlyRecurringAvg} currency={monthlyRecurring.currency} lowerIsBetter />
+          <ValueCard label="Income" amount={monthTotals[monthIdx].revenue} avgAmount={monthlyRevenueAvg} currency={monthTotals[monthIdx].currency} />
+          <ValueCard label="Expenses" amount={monthTotals[monthIdx].cost} avgAmount={monthlyCostAvg} currency={monthTotals[monthIdx].currency} lowerIsBetter />
+          <ValueCard label="Net earnings" amount={monthTotals[monthIdx].revenue - monthTotals[monthIdx].cost} avgAmount={monthlyRevenueAvg - monthlyCostAvg} currency={monthTotals[monthIdx].currency} textColor={monthTotals[monthIdx].revenue < monthTotals[monthIdx].cost ? "error" : undefined} />
+          <ValueCard label="Recurring expenses" amount={monthlyRecurring.monthlyTotals[monthIdx]} avgAmount={monthlyRecurringAvg} currency={monthlyRecurring.currency} lowerIsBetter />
         </Grid>
       </Grid>
     </Grid>

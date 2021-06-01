@@ -22,7 +22,7 @@ export function parseMonthlyTransactions(transactions: Array<Array<String|number
     monthTransactions.push(transactions[i])
     if (transactions[i][labelIdx] === "Lön") {
       salary = parseInt(transactions[i][valueIdx].toString());
-      if (monthTransactions.length > 1 && !parseInt(transactions[i][labelIdx].toString())) {
+      if (monthTransactions.length > 0 && !parseInt(transactions[i][labelIdx].toString())) {
         const lastDate = new Date(monthTransactions[0][dateIdx].toString());
         const firstDate = new Date(monthTransactions[monthTransactions.length-1][dateIdx].toString());
         const prettyDate = (d: Date) => d.toLocaleString('default', { month: 'long', day: 'numeric'});
