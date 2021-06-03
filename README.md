@@ -23,8 +23,10 @@ yarn build
 ```
 
 ## Screenshots
-Initial state
+**Initial state**
 ![screenshot1](./screenshots/screenshot1.png "Initial state")
-Loaded with example data
-![screenshot2](./screenshots/screenshot2.png "Example data upper")
-![screenshot3](./screenshots/screenshot3.png "Example data lower")
+**Hovering file**
+![screenshot2](./screenshots/screenshot2.png "Hovering file")
+**Loaded with example data**
+![screenshot3](./screenshots/screenshot3.png "Example data upper")
+![screenshot4](./screenshots/screenshot4.png "Example data lower")
